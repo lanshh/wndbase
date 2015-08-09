@@ -20,8 +20,8 @@
                                   call back as the second parameters(pUserData)
 *typedef BOOL (WINAPI *EnumerateFunc) (LPCTSTR lpFileOrPath, void* pUserData);
 ******************************************************************************/
-typedef BOOL (WINAPI *EnumerateFunc) (LPCTSTR lpFileOrPath, void* pUserData);
-bool filenum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFunc, void* pUserData);
+typedef BOOL (WINAPI *EnumerateFunc) (LPCTSTR lpFileOrPath,BOOL bEnumFiles,void* pUserData);
+BOOL FileEnum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFunc, void* pUserData);
 void ShowByteToDecimalStrW(HWND hwnd,TCHAR* Str,BYTE * DataBuf,int DataBufLength,int LineLen);
 void ShowByteToDecimalStrA(HWND hwnd,CHAR * Str,BYTE * DataBuf,int DataBufLength,int LineLen);
 void ShowByteTohexStrW(HWND hwnd,TCHAR* Str,BYTE * DataBuf,int DataBufLength,int LineLen);
@@ -35,7 +35,7 @@ int GetSysTimeW(TCHAR * buff,DWORD Len);
 int GetSysTimeA(CHAR  * buff,DWORD Len);
 int FindStrW(const int StartPos,const TCHAR * TSourceStr,const int iBytesLength,const TCHAR* TStrToFind,const int CharStrLength);
 int FindStrA(int StartPos,CHAR  * TSourceStr,int iBytesLength,CHAR * TStrToFind,int CharStrLength);
-int ReverseFindStrW(TCHAR * bRecieveBytes,int iBytesLength,TCHAR* CharStrToFind,int CharStrLength);
+int ReverseFindStrW(const TCHAR * bRecieveBytes,int iBytesLength,const TCHAR* CharStrToFind,int CharStrLength);
 int ReverseFindStrA(CHAR  * bRecieveBytes,int iBytesLength,CHAR * CharStrToFind,int CharStrLength);
 int GetRegistryDWS(HKEY HKEYLM,TCHAR *pSubKeysName,TCHAR **ppValueNames, DWORD*lpdwValueData,DWORD dwValuesCnt);
 int SetRegistryDWS(HKEY HKEYLM,TCHAR *pSubKeysName,TCHAR **ppValueNames, DWORD*lpdwValueData,DWORD dwValuesCnt);
@@ -121,4 +121,8 @@ DWORD shWriteAnsiFile(TCHAR * tFileName,BYTE * pbWriteBuf,DWORD dwBufLen,DWORD d
 *Synopsis     : Add string to the windows
 *              Create by lanshh 2014-04-14
 ******************************************************************************/
-void AddStringToWindow(HWND hWnd,TCHAR *str);
+void AddStringToWindow(HWND hWnd,TCHAR *str);BOOL InflateRect( RECT*lprc, int l,int t,int r,int b);
+BOOL FolderExists(LPCTSTR lpPath);
+int  CharToWChar(WCHAR *pszDst,int nDstSize,const CHAR *pszSrc);
+int  WCharToChar(CHAR *pszDst,int nDstSize,const WCHAR *pszSrc);
+

@@ -174,22 +174,15 @@ int GetSysTimeDataSecW(TCHAR * buff,DWORD Len)
 {
     SYSTEMTIME CollectTime;
     GetLocalTime(&CollectTime);
-    wsprintf(buff,L"%d-%d-%d",
-        CollectTime.wYear,
-        CollectTime.wMonth,
-        CollectTime.wDay);
+    swprintf_s(buff,Len,L"%04d-%02d-%02d",CollectTime.wYear,CollectTime.wMonth,CollectTime.wDay);
     return 0;
 }
 int GetSysTimeW(TCHAR * buff,DWORD Len)
 {
 	SYSTEMTIME CollectTime;
 	GetLocalTime(&CollectTime);
-	wsprintf(buff,L"(%d-%d-%d_%d-%d)",
-		CollectTime.wYear,
-		CollectTime.wMonth,
-		CollectTime.wDay,
-		CollectTime.wHour,
-		CollectTime.wMinute);
+	wsprintf(buff,L"(%d-%d-%d_%d-%d)", 
+     CollectTime.wYear,CollectTime.wMonth,CollectTime.wDay,CollectTime.wHour,CollectTime.wMinute);
 	return 0;
 }
 int GetSysTimeA(char * buff,DWORD Len)
@@ -246,7 +239,7 @@ int FindStrW(const int StartPos,const TCHAR * TSourceStr,const int iBytesLength,
 	}
 	return -1;
 }
-int ReverseFindStrW(TCHAR * bRecieveBytes,int iBytesLength,TCHAR* CharStrToFind,int CharStrLength)
+int ReverseFindStrW(const TCHAR * bRecieveBytes,int iBytesLength,const TCHAR* CharStrToFind,int CharStrLength)
 {
 	BOOL bResult = TRUE;
 	if (0 >= CharStrLength)
@@ -812,7 +805,7 @@ EXIT:
                                   the second parameters(pUserData)
 *typedef BOOL (WINAPI *EnumerateFunc) (LPCTSTR lpFileOrPath, void* pUserData);
 ******************************************************************************/
-bool filenum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFunc, void* pUserData)
+BOOL FileEnum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFunc, void* pUserData)
 {
     int                 cbpathlen;
     TCHAR               szPath[MAX_PATH];
@@ -820,62 +813,44 @@ bool filenum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFun
     HANDLE              hFindFile;
     TCHAR               tempPath[MAX_PATH]; 
     BOOL                bIsDirectory;
-    BOOL                bFinish;
-    BOOL                busereturn;
-    bFinish             = FALSE;
-    busereturn          = TRUE;
-    try
-    {
+    BOOL                bFinish     = FALSE;
+    BOOL                busereturn  = TRUE;
+    try {
         cbpathlen = _tcslen(lpPath);
-        if(NULL == lpPath || 0 >= cbpathlen) 
-        {
-            return false;
+        if(NULL == lpPath || 0 >= cbpathlen)  {
+            return FALSE;
         }
-        //NotifySys(NRS_DO_EVENTS, 0,0);
         _tcscpy(szPath, lpPath);
-        if(TEXT('\\') != lpPath[cbpathlen - 1] )
-        {
+        if(TEXT('\\') != lpPath[cbpathlen - 1] ) {
             _tcscat(szPath,TEXT("\\"));
         }
         _tcscat(szPath,TEXT("*"));
         hFindFile   = FindFirstFile(szPath, &fd);
-        if( INVALID_HANDLE_VALUE == hFindFile )
-        {
-            //FindClose(hFindFile);
-            {
-                return false;
-            }
+        if( INVALID_HANDLE_VALUE == hFindFile ) {
+                return FALSE;
         }
-        while(!bFinish)
-        {
+        while(!bFinish) {
             _tcscpy(tempPath,lpPath);
-            if(TEXT('\\') != lpPath[cbpathlen - 1] ) 
-            {
+            if(TEXT('\\') != lpPath[cbpathlen - 1] )  {
                 _tcscat(tempPath, TEXT("\\"));
             }
             _tcscat(tempPath,fd.cFileName);
             bIsDirectory = ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
-            if( bIsDirectory&&(_tcscmp(fd.cFileName,TEXT("."))==0 || _tcscmp(fd.cFileName, TEXT(".."))==0)) 
-            {
+            if( bIsDirectory&&(_tcscmp(fd.cFileName,TEXT("."))== 0|| _tcscmp(fd.cFileName, TEXT("..")) == 0))  {
                 bFinish = (FindNextFile(hFindFile, &fd) == FALSE);
                 continue;
             }
-            if(pFunc && bEnumFiles != bIsDirectory)
-            {
-                busereturn = pFunc(tempPath, pUserData);
-                if( FALSE == busereturn )
-                {
+            if(pFunc && bEnumFiles != bIsDirectory) {
+                busereturn = pFunc(tempPath,bIsDirectory, pUserData);
+                if( FALSE == busereturn ) {
                     FindClose( hFindFile );
-                    return false;
+                    return FALSE;
                 }
             }
-            //NotifySys(NRS_DO_EVENTS, 0,0);
-            if(bIsDirectory && bRecursion) //is subdirectory
-            {
-                if (false == filenum(tempPath, bRecursion, bEnumFiles, pFunc, pUserData))
-                {
+            if(bIsDirectory && bRecursion) {
+                if (FALSE == FileEnum(tempPath, bRecursion, bEnumFiles, pFunc, pUserData)) {
                     FindClose( hFindFile );
-                    return false;
+                    return FALSE;
                 }
             }
             bFinish = (FindNextFile(hFindFile, &fd) == FALSE);
@@ -884,10 +859,36 @@ bool filenum(LPTSTR lpPath, BOOL bRecursion, BOOL bEnumFiles, EnumerateFunc pFun
     }
     catch(...)
     { 
-        //ASSERT(0);
-        return false; 
+        return FALSE; 
     }
-    return true;
+    return TRUE;
+}
+BOOL FolderExists(LPCTSTR lpPath)  
+{  
+    HANDLE              hFindFile;
+    WIN32_FIND_DATA     fd      = {0};
+    DWORD               dwLen;
+    TCHAR               tempPath[MAX_PATH]; 
+    if(!lpPath) return FALSE;
+    dwLen               = _tcslen(lpPath);
+    if(0 == dwLen)  return FALSE;
+    _tcscpy(tempPath,lpPath);
+    if(TEXT('\\') == tempPath[dwLen - 1] ) {
+        tempPath[dwLen - 1] = TEXT('\0');
+    }
+    hFindFile   = FindFirstFile(tempPath, &fd);
+    /*
+    To examine a directory that is not a root directory, use the path to that directory, without a trailing backslash. 
+    For example, an argument of "C:\Windows" returns information about the directory "C:\Windows",
+    not about a directory or file in "C:\Windows". 
+    To examine the files and directories in "C:\Windows", use an lpFileName of "C:\Windows\*".
+    */
+    if( INVALID_HANDLE_VALUE == hFindFile ) {
+        return FALSE;
+    }
+    BOOL bIsDirectory = ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
+    FindClose( hFindFile );
+    return bIsDirectory;    
 }
 /******************************************************************************
 *Function Name:shWriteUniFile
@@ -997,3 +998,68 @@ DWORD shWriteAnsiFile(TCHAR * tFileName,BYTE * pbWriteBuf,DWORD dwBufLen,DWORD d
     CloseHandle(hFile);
     return 0;
 }
+BOOL InflateRect( RECT*lprc, int l,int t,int r,int b)
+{
+    lprc->left      -= l;
+    lprc->right     += r;
+    lprc->top       -= t;
+    lprc->bottom    += b;
+    if(lprc->left < 0) lprc->left   = 0;
+    if(lprc->top < 0)  lprc->top    = 0;
+    if(lprc->left > lprc->right ) lprc->right   = lprc->left + 1;
+    if(lprc->top > lprc->bottom ) lprc->bottom  = lprc->top + 1;
+    return TRUE;
+}
+int WCharToChar(CHAR *pszDst,int nDstSize,const WCHAR *pszSrc)
+{
+	CHAR    *pszOut = NULL;
+	int     nOutSize;
+	if (!pszSrc) {
+		return 0;
+	}
+	if ((NULL == pszDst)&&(0 != nDstSize)) {
+        return 0;
+    } else if (pszDst&&(0 == nDstSize)) {
+        return 0;
+    }
+    /*If the function succeeds and cbMultiByte is 0, the return value is the required size*/
+    nOutSize = WideCharToMultiByte(CP_ACP, 0,pszSrc, -1,NULL, 0/*cbMultiByte*/, NULL, NULL) /*+ 1*/;
+    if( 0 == nDstSize) {
+        /*Calculate the requires size*/
+        return nOutSize;
+    }
+    if(nOutSize > nDstSize) {
+        return 0;
+    }
+    nOutSize = WideCharToMultiByte(CP_ACP, 0,pszSrc,-1,pszDst,nDstSize,NULL,NULL);
+    return nOutSize;
+}
+int CharToWChar(WCHAR *pszDst,int nDstSize,const CHAR *pszSrc)
+{
+    WCHAR   *pszOut = NULL;
+    int     nOutSize;
+	if (!pszSrc) {
+		return 0;
+	}
+	if ((NULL == pszDst)&&(0 != nDstSize)) {
+        return 0;
+    } else if (pszDst&&(0 == nDstSize)) {
+        return 0;
+    }
+    nOutSize = MultiByteToWideChar(CP_ACP, 0,pszSrc,-1,NULL,0);
+    if(0 == nDstSize) {
+        /*Calculate the requires size*/
+        return nOutSize;
+    }
+    if(nOutSize > nDstSize) {
+        return NULL;
+    }
+    nOutSize = MultiByteToWideChar(CP_ACP, 0,pszSrc,-1,pszDst,nDstSize);
+    return nOutSize;
+}
+#if 0
+BOOL MoveWindow(HWND, RECT &rt, BOOL bRepaint);
+{
+    return MoveWindow(g_hTaskWnd, 0, 0, nWidth, nHeight , TRUE);
+}
+#endif

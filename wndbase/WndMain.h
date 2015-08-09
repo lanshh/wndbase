@@ -13,5 +13,6 @@ LRESULT about               (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam);
 LRESULT WndMainPaint        (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam);
 LRESULT WndMainEeaseProc    (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam);
 LRESULT WndMainSize         (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam);
+LRESULT WndMainSysCmdProc   (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam);
 
 

@@ -11,6 +11,9 @@ static const DlgMessageMap XmlDlgMsgs[] =
     WM_COMMAND          ,XmlDlgCmdProc,
     WM_DESTROY          ,XmlDlgDestroyProc,
     //WM_SIZE             ,XmlDlgSize,
+    WM_LBUTTONDOWN      ,XmlDlgLbdProc,
+    WM_KILLFOCUS        ,XmlDlgFocusProc,
+    WM_SETFOCUS         ,XmlDlgFocusProc
 };
                              
 static const DlgMessageCmdMap XmlDlgCmdMsgs[] = 
@@ -68,5 +71,13 @@ BOOL XmlDlgDestroy(VOID)
     }
     return TRUE;
 }
+INT_PTR XmlDlgLbdProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam)
+{
+    PostMessage(/*hWnd*/GetAppInfo()->hWndMain,WM_NCLBUTTONDOWN,HTCAPTION,lParam);
+    return 0;
+}
+INT_PTR XmlDlgFocusProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam)
+{
 
-
+    return FALSE;
+}

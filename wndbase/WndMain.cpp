@@ -24,7 +24,8 @@ const MessageMap WndMainMsgs[] =
     WM_DESTROY      ,WndMainDestroyProc,
     WM_CREATE       ,WndMainCreateProc,
     WM_COMMAND      ,WndMainCmdProc,
-    WM_SIZE         ,WndMainSize
+    WM_SIZE         ,WndMainSize,
+    WM_SYSCOMMAND   ,WndMainSysCmdProc,
     //WM_PAINT        ,WndMainPaint,
     //WM_ERASEBKGND   ,WndMainEeaseProc
 };
@@ -113,12 +114,26 @@ LRESULT WndMainCmdProc(HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam)
     }				  
     return DefWindowProc (hWnd, wMsg, wParam, lParam);
 }
+LRESULT WndMainSysCmdProc(HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam)
+{
+    if(2 ==  wParam) {
+        return MessageBox(hWnd,TEXT("This was made by lanshunhua"),TEXT("note"),MB_OK);
+    }
+    return DefWindowProc (hWnd, wMsg, wParam, lParam);
+}
+
 LRESULT WndMainCreateProc (HWND hWnd, UINT wMsg, WPARAM wParam,LPARAM lParam)
 {
     //APPINFO *AppInfo = SetAppInfo();
     //HWND    hWndTemp;
     //int     ix,iy;
     //SendMessage(hWnd, WM_SETICON, (WPARAM)TRUE, (LPARAM)LoadIcon(gethInstance(), (LPCTSTR)IDI_ICON1));
+    HMENU lSysMenu = GetSystemMenu(hWnd,false);
+    AppendMenu(lSysMenu,MF_SEPARATOR,0,0);
+    AppendMenu(lSysMenu,MF_STRING,2,TEXT("About..."));
+
+
+
     ghXmlDlg         = XmlDlgCreate(hWnd);
 	return 0;
 }
